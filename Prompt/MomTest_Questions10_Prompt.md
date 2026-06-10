@@ -80,15 +80,17 @@ MagicSquare_xx Mom Test 인터뷰를 진행해.
 
 ---
 
-## 종료·저장 프롬프트
+## 종료·저장 (Command)
 
 ```
 지금까지 답변 요약해줘
 ```
 
-```
-종료하고 Report 폴더에 Mom Test 질문 10개 인터뷰 결과 보고서 저장해줘
-```
+세션 종료 후 Cursor에서 **`/export-session`** 실행.
+
+- Report: `Report/NN.MomTest_Questions10_Report.md` (또는 세션 슬러그에 맞게)
+- Transcript: `Prompting/NN.MomTest_Questions10_Transcript.md`
+- 규칙: [`.cursor/commands/export-session.md`](../.cursor/commands/export-session.md)
 
 ---
 

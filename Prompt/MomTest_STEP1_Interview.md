@@ -50,11 +50,9 @@ MagicSquare_xx STEP 1 — Mom Test 인터뷰를 진행해.
 [N]번까지만 하고 종료할 수 있나요?
 ```
 
-보고서 저장:
+보고서·Transcript 저장:
 
-```
-종료하고 Report 폴더와 Prompt 폴더에 보고서와 프롬프트 저장해주세요
-```
+Cursor에서 **`/export-session`** 실행 (`01.XXX` 규칙 — [`.cursor/commands/export-session.md`](../.cursor/commands/export-session.md)).
 
 ---
 
