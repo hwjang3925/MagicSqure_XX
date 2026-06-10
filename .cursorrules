@@ -1,0 +1,74 @@
+# MagicSqure_XX — Cursor Rules (세션 3: Rule · Command · Test Loop)
+
+## 프로젝트 목적
+4×4 부분 마방진에서 빈칸을 채운 직후, 10선 합 34 여부를 즉시 판정하고
+틀리면 어느 줄인지 바로 짚는다. 솔버·UI·BCE 전체 설계는 범위 밖.
+
+## 도메인 규칙
+- 격자: `grid: list[list[int]]` — 4×4 고정
+- 셀 값: `0`(빈칸) 또는 `1~16`
+- `0`이 하나라도 있으면 합 계산·34 비교 생략 (R5)
+
+## 마법상수 34 (SSOT)
+- `MAGIC_SUM = 34`를 **한 곳**에만 정의한다 (`src/` 내 단일 상수)
+- 구현·테스트에 매직 넘버 `34` 직접 산포 금지 — 반드시 `MAGIC_SUM` 참조
+- `failed_lines[].expected`는 `MAGIC_SUM`에서 파생
+
+## 10선 정의 (행 4 + 열 4 + 대각 2 = 10선)
+| ID | 구성 (인덱스 0~3) |
+|----|-------------------|
+| R1~R4 | `grid[r][0..3]` — r=0,1,2,3 |
+| C1~C4 | `grid[0..3][c]` — c=0,1,2,3 |
+| D1 | 주대각 `grid[i][i]` — i=0..3 |
+| D2 | 부대각 `grid[i][3-i]` — i=0..3 |
+
+- 줄 ID 표준: **`R1`~`R4`, `C1`~`C4`, `D1`, `D2`** (다른 형식 사용 금지)
+- `fail` 시 10선 **전수 검사** — 틀린 줄만 `failed_lines`에 담되, **누락 없음**
+
+## 핵심 API (Command)
+```python
+validate_lines(grid) -> dict  # ok, status, failed_lines
+```
+- `ok`: `bool` — `pass`만 `true`, `fail`·`incomplete`는 `false`
+- `status`: `"pass"` | `"fail"` | `"incomplete"`
+- `failed_lines`: `[{ "id", "sum", "expected" }, ...]` — `expected`는 `MAGIC_SUM`
+- `pass`: 0 없음, 10선 모두 `MAGIC_SUM` → `ok=true`, `failed_lines=[]`
+- `fail`: 0 없음, 합≠`MAGIC_SUM` 줄만 → `ok=false`, `failed_lines`에 id·sum·expected
+- `incomplete`: `0` 포함 → `ok=false`, `status="incomplete"`, `failed_lines=[]`, 합 검증 생략
+- `incomplete` ≠ `fail`: 둘 다 `ok=false`이나 `status`로 구분, incomplete는 줄 검사 안 함
+
+구현: `src/validate_lines.py` · 테스트: `tests/test_validate_lines.py`
+
+## TDD (엄격)
+사이클: **RED → GREEN → REFACTOR**. 한 번에 한 Phase만.
+
+1. **RED**: `tests/`만 수정 — **반드시 실패하는 테스트를 먼저** 추가 (구현·스텁 선행 금지)
+2. **GREEN**: `src/`만 수정 — 테스트 통과에 필요한 최소 구현
+3. **REFACTOR**: 동작 유지, 중복·가독성만 개선
+
+### RED 시나리오·assert
+- `fail`: `ok=false`, `status="fail"`, `failed_lines`의 **id·sum·expected**까지 assert
+- `incomplete`: `ok=false`, `status="incomplete"`, `failed_lines=[]`, **합 미계산** assert
+
+### 금지
+- `skip` / `xfail` / `pytest.skip()` 금지
+- assert 완화·삭제·모호한 matcher 우회 금지
+- RED에서 **`tests/` 외 모든 경로** 수정 금지 (`src/` 포함)
+- GREEN 없이 REFACTOR 금지
+
+### TDD 응답 형식
+TDD 작업 시 **첫 줄**에 Phase 선언: `Phase: RED` / `GREEN` / `REFACTOR`
+
+## 코딩 원칙
+- `validate_lines`와 10선·`MAGIC_SUM`·incomplete 판정에만 집중
+- 1~16 중복·범위 검증, Solver, UI, Entity/Boundary는 하지 않음
+- 기존 pytest 관례 따름 · 불필요한 추상화 금지
+
+## AI 어시스턴트
+- **한국어** 소통 (코드·식별자는 영어 가능)
+- 사용자 명시 요청 전 **git commit·push 금지**
+- 요청 범위 밖 파일·문서 생성 금지
+- 변경 후 `pytest`로 검증
+
+## 범위 밖
+BCE 전체, GridUI, InputHandler, Solver, MissingFinder, Hook, MCP
