@@ -45,7 +45,7 @@
 | **R — Role** | 4×4 **부분** 마방진 학습자. 빈칸 2개(0)를 1~16으로 채운 뒤 **맞았는지 스스로 확인**해야 함 |
 | **G — Goal** | 빈칸 채운 후 **10선 합 34 여부를 즉시 판정**하고, 틀리면 **어느 행·열·대각선**인지 식별 *(20분 낭비 → 처음·한 번에)* |
 | **I — Input** | `grid: list[list[int]]` — 4×4 정수 격자. 셀 값 **0**(빈칸) 또는 **1~16** |
-| **O — Output** | `validate_lines(grid)` → **ValidationResult**: `ok` (bool), `status` (`"pass"` \| `"fail"` \| `"incomplete"`), `lines[]` — fail 시 **틀린 줄만** `{ id, sum, expected: 34 }`. 줄 ID: `row:0`~`row:3`, `col:0`~`col:3`, `diag:main`, `diag:anti`. **R5:** 격자에 `0`이 하나라도 있으면 `status=incomplete`, 합 계산·34 비교는 수행하지 않음 |
+| **O — Output** | `validate_lines(grid)` → **ValidationResult**: `ok` (bool), `status` (`"pass"` \| `"fail"` \| `"incomplete"`), `lines[]`. **R1~R4:** 행 4 + 열 4 + 대각 2(총 10선) 각각 합 34 검사. **R5:** `0`이 하나라도 있으면 합 계산·34 비교 생략. **pass** (0 없음, 10선 모두 34): `ok=true`, `status="pass"`, `lines[]=[]`. **fail** (0 없음, 합≠34): `ok=false`, `status="fail"`, `lines[]`에 **틀린 줄만** `{ id, sum, expected: 34 }`. **incomplete** (`0` 포함): `ok=false`, `status="incomplete"`, `lines[]=[]`. 줄 ID: `row:0`~`row:3`, `col:0`~`col:3`, `diag:main`, `diag:anti` |
 
 ---
 
@@ -53,9 +53,9 @@
 
 | # | 성공 기준 | 연결 증거 |
 |---|-----------|-----------|
-| 1 | **`validate_lines(grid)`** 한 번으로 **10선×34 검증**을 수행한다 (행 4 + 열 4 + 대각 2) | “행·열·**대각선** 합 맞췄는데 **대각선 하나를 빼먹어서**” |
-| 2 | Test Loop **Red→Green**: Red — 합≠34 → `ok=false`, `status=fail`; Red — `0` 포함 → `status=incomplete`; Green — 정답 격자 → `ok=true`, `status=pass` | “**34가 안 맞아 20분** 날렸다” → 같은 실패를 테스트로 고정 |
-| 3 | fail 시 `lines[]`에 **틀린 줄 ID**(`row:2`, `diag:main` 등)와 `sum`, `expected: 34`를 반환한다 (10선 전부 검사, 줄 누락 없음) | “맞는지 **판정하지 못하고**” 같은 시도 반복 → **줄 단위**로 짚어야 함 |
+| 1 | **`0`이 없는 완성 격자**에서 `validate_lines(grid)` 한 번으로 **10선×34 검증**을 수행한다 (행 4 + 열 4 + 대각 2). `0` 포함 시 R5 — `ok=false`, `status=incomplete`, `lines[]=[]`, 합 검증 생략 | “행·열·**대각선** 합 맞췄는데 **대각선 하나를 빼먹어서**” |
+| 2 | Test Loop **Red→Green**: Red — 합≠34 → `ok=false`, `status=fail`; Red — `0` 포함 → `ok=false`, `status=incomplete`, `lines[]=[]`, 합 검증 생략; Green — 정답 격자 → `ok=true`, `status=pass`, `lines[]=[]` | “**34가 안 맞아 20분** 날렸다” → 같은 실패를 테스트로 고정 |
+| 3 | **fail** 시 `lines[]`에 **틀린 줄 ID**(`row:2`, `diag:main` 등)와 `sum`, `expected: 34`를 반환한다 (0 없을 때 10선 전부 검사, 줄 누락 없음). **pass**·**incomplete** 시 `lines[]=[]` | “맞는지 **판정하지 못하고**” 같은 시도 반복 → **줄 단위**로 짚어야 함 |
 
 ---
 
@@ -75,10 +75,10 @@
 
 | 계층 | 세션 3에서 할 일 | Mom Test 연결 |
 |------|------------------|---------------|
-| **Rule** | R1~R5: **행·열·대각선 합 = 34** 판정. R5 — 0(빈칸) 포함 시 `status=incomplete` (**fail과 구분**, 합 검증 생략) | “34가 안 맞았는지” **판정 기준**을 코드·문서로 고정 |
-| **Command** | `validate_lines(grid)` → `ValidationResult` — 10선 합 계산 + 34 비교 + fail 시 **틀린 줄 ID·sum·expected** 반환 | 합 확인에 **20분** → **한 Command**로 대체 |
+| **Rule** | R1~R4: 행 4·열 4·대각 2(10선) **합 = 34** 판정. R5 — `0`(빈칸) 포함 시 `ok=false`, `status=incomplete` (**fail과 구분**), 합 검증 생략, `lines[]=[]` | “34가 안 맞았는지” **판정 기준**을 코드·문서로 고정 |
+| **Command** | `validate_lines(grid)` → `ValidationResult` — `0` 없을 때만 10선 합 계산 + 34 비교; fail 시 **틀린 줄 ID·sum·expected**; `0` 있으면 `incomplete` 반환 | 합 확인에 **20분** → **한 Command**로 대체 |
 | **(Skill)** | *(선택)* pytest 실행 / 격자 fixture 준비 Skill | 매번 손으로 10선 더하기 제거 |
-| **Test Loop** | Red: 합≠34 → `ok=false`, `status=fail`, **실패 줄** assert; Red: `0` 포함 → `status=incomplete`; Green: 정답 격자 → `ok=true`, `status=pass` | **20분 낭비** → **같은 실패를 1번에 재현** |
+| **Test Loop** | Red: 합≠34 → `ok=false`, `status=fail`, **실패 줄** assert; Red: `0` 포함 → `ok=false`, `status=incomplete`, `lines[]=[]`, 합 검증 생략; Green: 정답 격자 → `ok=true`, `status=pass`, `lines[]=[]` | **20분 낭비** → **같은 실패를 1번에 재현** |
 
 **이번 세션에서 만들지 않음:** Entity(`MagicSquare`/`Cell`), Boundary(`ResultDisplay`), Solver, MissingFinder, 전체 BCE, Hook, MCP
 

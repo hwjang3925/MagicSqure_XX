@@ -5,7 +5,7 @@
 - **입력:** [MomTest_STEP1_Report.md](../Report/MomTest_STEP1_Report.md)의 Mom Test 결과(페르소나 · 진짜 문제 · 증거 3줄)
 - **실행:** 아래 「워크북 작성 프롬프트」를 AI에 붙여 넣기
 - **결과:** `Report/Session3_Workbook.md` 형식으로 정리
-- **저장:** 「저장 프롬프트」로 Report · Prompt 폴더에 보관
+- **저장:** `/export-session` Command — `Report/NN.Slug_Report.md` · `Prompting/NN.Slug_Transcript.md` (`01.XXX` 규칙)
 
 ---
 
@@ -32,11 +32,13 @@ MagicSquare_xx 세션 3 워크북을 채워줘:
 
 ---
 
-## 저장 프롬프트
+## 저장 (Command)
 
-```
-종료하고 Report 폴더와 Prompt 폴더에 보고서와 프롬프트 저장해주세요
-```
+세션 종료 시 Cursor에서 **`/export-session`** 실행.
+
+- Report: `Report/NN.Slug_Report.md`
+- Transcript: `Prompting/NN.Slug_Transcript.md`
+- 규칙: [`.cursor/commands/export-session.md`](../.cursor/commands/export-session.md)
 
 ---
 
